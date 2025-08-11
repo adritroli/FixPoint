@@ -1,14 +1,31 @@
-import { Button } from "@/components/ui/button";
-import { ModeToggle } from "./components/mode-toggle";
+import HomePage from "./pages/home";
+import UsersPage from "./pages/users";
+import PruebasPage from "./pages/pruebas";
+import LoginPage from "./pages/login/login";
+import { createBrowserRouter, RouterProvider } from "react-router-dom";
 
 function App() {
   return (
-    <div className="flex min-h-svh flex-col items-center justify-center">
-      <ModeToggle />
-      <h1 className="text-3xl font-bold">Hello, world!</h1>
-      <p className="text-lg">This is a simple example of a React component.</p>
-      <Button>Click me</Button>
-    </div>
+    <RouterProvider
+      router={createBrowserRouter([
+        {
+          path: "/home",
+          element: <HomePage />,
+        },
+        {
+          path: "/users",
+          element: <UsersPage />,
+        },
+        {
+          path: "/pruebas",
+          element: <PruebasPage />,
+        },
+        {
+          path: "/",
+          element: <LoginPage />,
+        },
+      ])}
+    />
   );
 }
 
