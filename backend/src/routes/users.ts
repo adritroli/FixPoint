@@ -1,6 +1,7 @@
 import { Request, Response, NextFunction, Router } from "express";
 import * as usersController from "../controllers/users";
-import   multer from "multer";
+import { getUserGadgets, setUserGadgets } from "../controllers/users";
+import multer from "multer";
 import path from "path";
 import { pool } from "../db";
 
@@ -34,5 +35,7 @@ router.get("/count", async (req, res) => {
   );
   res.json({ count: rows[0]?.count ?? 0 });
 });
+router.get("/:id/gadgets", getUserGadgets);
+router.put("/:id/gadgets", setUserGadgets);
 
 export default router;

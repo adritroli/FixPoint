@@ -48,6 +48,7 @@ import LoginPage from "./pages/login/login";
 import UsersPage from "./pages/users";
 import HomePage from "./pages/home";
 import CompaniesPage from "./pages/companies";
+import PruebasPage from "./pages/pruebas";
 
 function RequireAuth({ children }: { children: React.ReactNode }) {
   const location = useLocation();
@@ -83,6 +84,7 @@ function App() {
             <RequireAuth>
               <>
                 <Routes>
+                  <Route path="/pruebas" element={<PruebasPage />} />
                   <Route path="/companies" element={<CompaniesPage />} />
                   <Route path="/home" element={<HomePage />} />
                   <Route path="/users" element={<UsersPage />} />

@@ -140,4 +140,29 @@ export async function logoutUser(req: Request, res: Response) {
     res.status(500).json({ error: "Error al desloguear usuario" });
   }
 }
-  
+
+// GET /api/users/:id/gadgets
+export async function getUserGadgets(req: Request, res: Response) {
+  try {
+    const id = Number(req.params.id);
+    const [rows]: any = await pool.query("SELECT gadgets FROM users WHERE id = ?", [id]);
+    if (!rows.length) return res.json({ gadgets: [] });
+    const gadgets = rows[0].gadgets ? JSON.parse(rows[0].gadgets) : [];
+    res.json({ gadgets });
+  } catch (e) {
+    res.status(500).json({ error: "Error al obtener gadgets" });
+  }
+}
+
+// PUT /api/users/:id/gadgets
+export async function setUserGadgets(req: Request, res: Response) {
+  try {
+    const id = Number(req.params.id);
+    const { gadgets } = req.body;
+    await pool.query("UPDATE users SET gadgets = ? WHERE id = ?", [JSON.stringify(gadgets), id]);
+    res.json({ ok: true });
+  } catch (e) {
+    res.status(500).json({ error: "Error al guardar gadgets" });
+  }
+}
+
