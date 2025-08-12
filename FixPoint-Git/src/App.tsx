@@ -37,74 +37,65 @@ import DocumentosPage from "@/pages/documentos";
 import InventarioPage from "@/pages/inventario";
 import RRHHPage from "@/pages/rrhh";
 import ActivosPage from "@/pages/activos";
-import DefaultLayout from "./config/layout";
+import LoginPage from "./pages/login/login";
 
 function App() {
   return (
-    <DefaultLayout>
+    <>
       <Router>
-        <div style={{ display: "flex", height: "100vh" }}>
-          <main style={{ flex: 1, padding: 24, overflow: "auto" }}>
-            <Routes>
-              <Route path="/kanban" element={<KanbanPage />} />
-              <Route path="/sprints" element={<SprintsPage />} />
-              <Route path="/gantt" element={<GanttPage />} />
-              <Route path="/subtareas" element={<SubtareasPage />} />
-              <Route
-                path="/automatizaciones"
-                element={<AutomatizacionesPage />}
-              />
-              <Route path="/plantillas" element={<PlantillasPage />} />
-              <Route path="/vistas" element={<VistasPage />} />
-              <Route path="/tickets" element={<TicketsPage />} />
-              <Route
-                path="/clasificacion-ia"
-                element={<ClasificacionIAPage />}
-              />
-              <Route
-                path="/integracion-codigo"
-                element={<IntegracionCodigoPage />}
-              />
-              <Route path="/workflows" element={<WorkflowsPage />} />
-              <Route
-                path="/historial-incidencias"
-                element={<HistorialIncidenciasPage />}
-              />
-              <Route path="/soporte" element={<SoportePage />} />
-              <Route path="/escalado" element={<EscaladoPage />} />
-              <Route path="/chat" element={<ChatPage />} />
-              <Route path="/videollamadas" element={<VideollamadasPage />} />
-              <Route path="/comentarios" element={<ComentariosPage />} />
-              <Route path="/docs" element={<DocsPage />} />
-              <Route path="/wiki" element={<WikiPage />} />
-              <Route path="/noticias" element={<NoticiasPage />} />
-              <Route path="/recursos" element={<RecursosPage />} />
-              <Route path="/disponibilidad" element={<DisponibilidadPage />} />
-              <Route path="/calendarios" element={<CalendariosPage />} />
-              <Route path="/hitos" element={<HitosPage />} />
-              <Route path="/presupuestos" element={<PresupuestosPage />} />
-              <Route path="/proveedores" element={<ProveedoresPage />} />
-              <Route path="/reportes" element={<ReportesPage />} />
-              <Route path="/kpis" element={<KPIsPage />} />
-              <Route path="/dashboard" element={<DashboardPage />} />
-              <Route path="/exportar" element={<ExportarPage />} />
-              <Route path="/analisis-ia" element={<AnalisisIAPage />} />
-              <Route
-                path="/historial-reportes"
-                element={<HistorialReportesPage />}
-              />
-              <Route path="/crm" element={<CrmPage />} />
-              <Route path="/contratos" element={<ContratosPage />} />
-              <Route path="/documentos" element={<DocumentosPage />} />
-              <Route path="/inventario" element={<InventarioPage />} />
-              <Route path="/rrhh" element={<RRHHPage />} />
-              <Route path="/activos" element={<ActivosPage />} />
-              {/* Puedes agregar una ruta por defecto o de error */}
-            </Routes>
-          </main>
-        </div>
+        <Routes>
+          <Route path="/" element={<LoginPage />} />
+          <Route path="/kanban" element={<KanbanPage />} />
+          <Route path="/sprints" element={<SprintsPage />} />
+          <Route path="/gantt" element={<GanttPage />} />
+          <Route path="/subtareas" element={<SubtareasPage />} />
+          <Route path="/automatizaciones" element={<AutomatizacionesPage />} />
+          <Route path="/plantillas" element={<PlantillasPage />} />
+          <Route path="/vistas" element={<VistasPage />} />
+          <Route path="/tickets" element={<TicketsPage />} />
+          <Route path="/clasificacion-ia" element={<ClasificacionIAPage />} />
+          <Route
+            path="/integracion-codigo"
+            element={<IntegracionCodigoPage />}
+          />
+          <Route path="/workflows" element={<WorkflowsPage />} />
+          <Route
+            path="/historial-incidencias"
+            element={<HistorialIncidenciasPage />}
+          />
+          <Route path="/soporte" element={<SoportePage />} />
+          <Route path="/escalado" element={<EscaladoPage />} />
+          <Route path="/chat" element={<ChatPage />} />
+          <Route path="/videollamadas" element={<VideollamadasPage />} />
+          <Route path="/comentarios" element={<ComentariosPage />} />
+          <Route path="/docs" element={<DocsPage />} />
+          <Route path="/wiki" element={<WikiPage />} />
+          <Route path="/noticias" element={<NoticiasPage />} />
+          <Route path="/recursos" element={<RecursosPage />} />
+          <Route path="/disponibilidad" element={<DisponibilidadPage />} />
+          <Route path="/calendarios" element={<CalendariosPage />} />
+          <Route path="/hitos" element={<HitosPage />} />
+          <Route path="/presupuestos" element={<PresupuestosPage />} />
+          <Route path="/proveedores" element={<ProveedoresPage />} />
+          <Route path="/reportes" element={<ReportesPage />} />
+          <Route path="/kpis" element={<KPIsPage />} />
+          <Route path="/dashboard" element={<DashboardPage />} />
+          <Route path="/exportar" element={<ExportarPage />} />
+          <Route path="/analisis-ia" element={<AnalisisIAPage />} />
+          <Route
+            path="/historial-reportes"
+            element={<HistorialReportesPage />}
+          />
+          <Route path="/crm" element={<CrmPage />} />
+          <Route path="/contratos" element={<ContratosPage />} />
+          <Route path="/documentos" element={<DocumentosPage />} />
+          <Route path="/inventario" element={<InventarioPage />} />
+          <Route path="/rrhh" element={<RRHHPage />} />
+          <Route path="/activos" element={<ActivosPage />} />
+          {/* Puedes agregar una ruta por defecto o de error */}
+        </Routes>
       </Router>
-    </DefaultLayout>
+    </>
   );
 }
 
