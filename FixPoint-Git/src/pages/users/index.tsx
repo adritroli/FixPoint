@@ -85,7 +85,7 @@ export default function UsersPage() {
 
   // Fetch users from API
   useEffect(() => {
-    fetch("/api/users")
+    fetch("http://localhost:5000/api/users")
       .then((r) => r.json())
       .then((data) => {
         setUsers(data);
@@ -132,7 +132,7 @@ export default function UsersPage() {
     setLoading(true);
     setMsg(null);
     try {
-      const res = await fetch("/api/users", {
+      const res = await fetch("http://localhost:5000/api/users", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify(form),
@@ -148,7 +148,7 @@ export default function UsersPage() {
         });
         setOpenCreate(false);
         // Refrescar usuarios
-        fetch("/api/users")
+        fetch("http://localhost:5000/api/users")
           .then((r) => r.json())
           .then((data) => setUsers(data));
       } else {
@@ -163,7 +163,7 @@ export default function UsersPage() {
   // Eliminar usuario
   const handleDelete = async (id: number) => {
     if (!window.confirm("¿Seguro que deseas eliminar este usuario?")) return;
-    await fetch(`/api/users/${id}`, { method: "DELETE" });
+    await fetch(`http://localhost:5000/api/users/${id}`, { method: "DELETE" });
     setUsers((prev) => prev.filter((u) => u.id !== id));
   };
 
@@ -174,16 +174,19 @@ export default function UsersPage() {
     setLoading(true);
     setMsg(null);
     try {
-      const res = await fetch(`/api/users/${openEdit.id}`, {
-        method: "PUT",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
-      });
+      const res = await fetch(
+        `http://localhost:5000/api/users/${openEdit.id}`,
+        {
+          method: "PUT",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify(form),
+        }
+      );
       if (res.ok) {
         setMsg("Usuario actualizado");
         setOpenEdit(null);
         // Refrescar usuarios
-        fetch("/api/users")
+        fetch("http://localhost:5000/api/users")
           .then((r) => r.json())
           .then((data) => setUsers(data));
       } else {

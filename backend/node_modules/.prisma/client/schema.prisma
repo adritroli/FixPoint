@@ -7,4 +7,588 @@ datasource db {
   url      = env("DATABASE_URL")
 }
 
-// Puedes ejecutar `npx prisma db pull` para importar el esquema real de la base de datos existente.
+model assets {
+  id            Int            @id @default(autoincrement())
+  name          String         @db.VarChar(150)
+  type          String?        @db.VarChar(50)
+  serial_number String?        @db.VarChar(100)
+  assigned_to   Int?
+  status        assets_status? @default(active)
+  users         users?         @relation(fields: [assigned_to], references: [id], onUpdate: NoAction, map: "assets_ibfk_1")
+
+  @@index([assigned_to], map: "assigned_to")
+}
+
+model budgets {
+  id          Int       @id @default(autoincrement())
+  project_id  Int
+  amount      Decimal   @db.Decimal(12, 2)
+  description String?   @db.Text
+  created_at  DateTime? @default(now()) @db.DateTime(0)
+  projects    projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "budgets_ibfk_1")
+
+  @@index([project_id], map: "project_id")
+}
+
+model channel_members {
+  id         Int      @id @default(autoincrement())
+  channel_id Int
+  user_id    Int
+  channels   channels @relation(fields: [channel_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "channel_members_ibfk_1")
+  users      users    @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "channel_members_ibfk_2")
+
+  @@index([channel_id], map: "channel_id")
+  @@index([user_id], map: "user_id")
+}
+
+model channels {
+  id              Int               @id @default(autoincrement())
+  team_id         Int?
+  name            String            @db.VarChar(100)
+  type            channels_type?    @default(public)
+  channel_members channel_members[]
+  teams           teams?            @relation(fields: [team_id], references: [id], onUpdate: NoAction, map: "channels_ibfk_1")
+  messages        messages[]
+
+  @@index([team_id], map: "team_id")
+}
+
+model clients {
+  id         Int       @id @default(autoincrement())
+  name       String    @db.VarChar(150)
+  email      String?   @db.VarChar(150)
+  phone      String?   @db.VarChar(50)
+  company    String?   @db.VarChar(150)
+  created_at DateTime? @default(now()) @db.DateTime(0)
+  leads      leads[]
+}
+
+model contracts {
+  id          Int               @id @default(autoincrement())
+  supplier_id Int?
+  project_id  Int?
+  description String?           @db.Text
+  start_date  DateTime?         @db.Date
+  end_date    DateTime?         @db.Date
+  amount      Decimal?          @db.Decimal(12, 2)
+  status      contracts_status? @default(active)
+  suppliers   suppliers?        @relation(fields: [supplier_id], references: [id], onUpdate: NoAction, map: "contracts_ibfk_1")
+  projects    projects?         @relation(fields: [project_id], references: [id], onUpdate: NoAction, map: "contracts_ibfk_2")
+
+  @@index([project_id], map: "project_id")
+  @@index([supplier_id], map: "supplier_id")
+}
+
+model costs {
+  id          Int       @id @default(autoincrement())
+  project_id  Int
+  description String?   @db.Text
+  amount      Decimal   @db.Decimal(12, 2)
+  date        DateTime? @db.Date
+  projects    projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "costs_ibfk_1")
+
+  @@index([project_id], map: "project_id")
+}
+
+model documents {
+  id         Int             @id @default(autoincrement())
+  project_id Int?
+  name       String          @db.VarChar(150)
+  content    String?         @db.Text
+  type       documents_type? @default(doc)
+  created_by Int?
+  created_at DateTime?       @default(now()) @db.DateTime(0)
+  updated_at DateTime?       @default(now()) @db.DateTime(0)
+  projects   projects?       @relation(fields: [project_id], references: [id], onUpdate: NoAction, map: "documents_ibfk_1")
+  users      users?          @relation(fields: [created_by], references: [id], onUpdate: NoAction, map: "documents_ibfk_2")
+
+  @@index([created_by], map: "created_by")
+  @@index([project_id], map: "project_id")
+}
+
+model events {
+  id             Int          @id @default(autoincrement())
+  project_id     Int?
+  name           String       @db.VarChar(150)
+  description    String?      @db.Text
+  start_datetime DateTime?    @db.DateTime(0)
+  end_datetime   DateTime?    @db.DateTime(0)
+  type           events_type? @default(other)
+  projects       projects?    @relation(fields: [project_id], references: [id], onUpdate: NoAction, map: "events_ibfk_1")
+
+  @@index([project_id], map: "project_id")
+}
+
+model hr_records {
+  id      Int              @id @default(autoincrement())
+  user_id Int
+  type    hr_records_type? @default(attendance)
+  details String?          @db.Text
+  date    DateTime?        @db.Date
+  users   users            @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "hr_records_ibfk_1")
+
+  @@index([user_id], map: "user_id")
+}
+
+model leads {
+  id         Int           @id @default(autoincrement())
+  client_id  Int?
+  project_id Int?
+  status     leads_status? @default(new)
+  notes      String?       @db.Text
+  created_at DateTime?     @default(now()) @db.DateTime(0)
+  clients    clients?      @relation(fields: [client_id], references: [id], onUpdate: NoAction, map: "leads_ibfk_1")
+  projects   projects?     @relation(fields: [project_id], references: [id], onUpdate: NoAction, map: "leads_ibfk_2")
+
+  @@index([client_id], map: "client_id")
+  @@index([project_id], map: "project_id")
+}
+
+model messages {
+  id         Int       @id @default(autoincrement())
+  channel_id Int
+  user_id    Int
+  content    String    @db.Text
+  created_at DateTime? @default(now()) @db.DateTime(0)
+  channels   channels  @relation(fields: [channel_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "messages_ibfk_1")
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "messages_ibfk_2")
+
+  @@index([channel_id], map: "channel_id")
+  @@index([user_id], map: "user_id")
+}
+
+model permissions {
+  id         Int       @id @default(autoincrement())
+  user_id    Int
+  project_id Int?
+  permission String    @db.VarChar(50)
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "permissions_ibfk_1")
+  projects   projects? @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "permissions_ibfk_2")
+
+  @@index([project_id], map: "project_id")
+  @@index([user_id], map: "user_id")
+}
+
+model project_resources {
+  id            Int       @id @default(autoincrement())
+  project_id    Int
+  resource_id   Int
+  assigned_from DateTime? @db.Date
+  assigned_to   DateTime? @db.Date
+  projects      projects  @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "project_resources_ibfk_1")
+  resources     resources @relation(fields: [resource_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "project_resources_ibfk_2")
+
+  @@index([project_id], map: "project_id")
+  @@index([resource_id], map: "resource_id")
+}
+
+model projects {
+  id                Int                 @id @default(autoincrement())
+  team_id           Int?
+  name              String              @db.VarChar(150)
+  description       String?             @db.Text
+  status            projects_status?    @default(active)
+  start_date        DateTime?           @db.Date
+  end_date          DateTime?           @db.Date
+  created_at        DateTime?           @default(now()) @db.DateTime(0)
+  budgets           budgets[]
+  contracts         contracts[]
+  costs             costs[]
+  documents         documents[]
+  events            events[]
+  leads             leads[]
+  permissions       permissions[]
+  project_resources project_resources[]
+  teams             teams?              @relation(fields: [team_id], references: [id], onUpdate: NoAction, map: "projects_ibfk_1")
+  reports           reports[]
+  sprints           sprints[]
+  tasks             tasks[]
+  tickets           tickets[]
+
+  @@index([team_id], map: "team_id")
+}
+
+model reports {
+  id         Int           @id @default(autoincrement())
+  project_id Int?
+  team_id    Int?
+  user_id    Int?
+  type       reports_type? @default(performance)
+  data       Json?
+  created_at DateTime?     @default(now()) @db.DateTime(0)
+  projects   projects?     @relation(fields: [project_id], references: [id], onUpdate: NoAction, map: "reports_ibfk_1")
+  teams      teams?        @relation(fields: [team_id], references: [id], onUpdate: NoAction, map: "reports_ibfk_2")
+  users      users?        @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "reports_ibfk_3")
+
+  @@index([project_id], map: "project_id")
+  @@index([team_id], map: "team_id")
+  @@index([user_id], map: "user_id")
+}
+
+model resources {
+  id                Int                     @id @default(autoincrement())
+  name              String                  @db.VarChar(100)
+  type              resources_type?         @default(person)
+  user_id           Int?
+  team_id           Int?
+  availability      resources_availability? @default(available)
+  project_resources project_resources[]
+  users             users?                  @relation(fields: [user_id], references: [id], onUpdate: NoAction, map: "resources_ibfk_1")
+  teams             teams?                  @relation(fields: [team_id], references: [id], onUpdate: NoAction, map: "resources_ibfk_2")
+
+  @@index([team_id], map: "team_id")
+  @@index([user_id], map: "user_id")
+}
+
+model sprint_tasks {
+  id        Int     @id @default(autoincrement())
+  sprint_id Int
+  task_id   Int
+  sprints   sprints @relation(fields: [sprint_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sprint_tasks_ibfk_1")
+  tasks     tasks   @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sprint_tasks_ibfk_2")
+
+  @@index([sprint_id], map: "sprint_id")
+  @@index([task_id], map: "task_id")
+}
+
+model sprints {
+  id           Int             @id @default(autoincrement())
+  project_id   Int
+  name         String          @db.VarChar(100)
+  start_date   DateTime?       @db.Date
+  end_date     DateTime?       @db.Date
+  goal         String?         @db.Text
+  status       sprints_status? @default(planned)
+  sprint_tasks sprint_tasks[]
+  projects     projects        @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "sprints_ibfk_1")
+
+  @@index([project_id], map: "project_id")
+}
+
+model suppliers {
+  id           Int         @id @default(autoincrement())
+  name         String      @db.VarChar(150)
+  contact_info String?     @db.Text
+  contracts    contracts[]
+}
+
+model task_assignees {
+  id      Int   @id @default(autoincrement())
+  task_id Int
+  user_id Int
+  tasks   tasks @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "task_assignees_ibfk_1")
+  users   users @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "task_assignees_ibfk_2")
+
+  @@index([task_id], map: "task_id")
+  @@index([user_id], map: "user_id")
+}
+
+model task_label_links {
+  id          Int         @id @default(autoincrement())
+  task_id     Int
+  label_id    Int
+  tasks       tasks       @relation(fields: [task_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "task_label_links_ibfk_1")
+  task_labels task_labels @relation(fields: [label_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "task_label_links_ibfk_2")
+
+  @@index([label_id], map: "label_id")
+  @@index([task_id], map: "task_id")
+}
+
+model task_labels {
+  id               Int                @id @default(autoincrement())
+  name             String             @db.VarChar(50)
+  color            String?            @db.VarChar(20)
+  task_label_links task_label_links[]
+}
+
+model tasks {
+  id               Int                @id @default(autoincrement())
+  project_id       Int
+  parent_task_id   Int?
+  name             String             @db.VarChar(150)
+  description      String?            @db.Text
+  status           tasks_status?      @default(todo)
+  priority         tasks_priority?    @default(medium)
+  due_date         DateTime?          @db.Date
+  wip_limit        Int?
+  swimlane         String?            @db.VarChar(50)
+  created_by       Int?
+  created_at       DateTime?          @default(now()) @db.DateTime(0)
+  updated_at       DateTime?          @default(now()) @db.DateTime(0)
+  sprint_tasks     sprint_tasks[]
+  task_assignees   task_assignees[]
+  task_label_links task_label_links[]
+  projects         projects           @relation(fields: [project_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "tasks_ibfk_1")
+  tasks            tasks?             @relation("tasksTotasks", fields: [parent_task_id], references: [id], onUpdate: NoAction, map: "tasks_ibfk_2")
+  other_tasks      tasks[]            @relation("tasksTotasks")
+  users            users?             @relation(fields: [created_by], references: [id], onUpdate: NoAction, map: "tasks_ibfk_3")
+
+  @@index([created_by], map: "created_by")
+  @@index([parent_task_id], map: "parent_task_id")
+  @@index([project_id], map: "project_id")
+}
+
+model team_members {
+  id      Int                @id @default(autoincrement())
+  team_id Int
+  user_id Int
+  role    team_members_role? @default(member)
+  teams   teams              @relation(fields: [team_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "team_members_ibfk_1")
+  users   users              @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "team_members_ibfk_2")
+
+  @@index([team_id], map: "team_id")
+  @@index([user_id], map: "user_id")
+}
+
+model teams {
+  id           Int            @id @default(autoincrement())
+  name         String         @db.VarChar(100)
+  logo         String?        @db.VarChar(255)
+  plan         String?        @db.VarChar(50)
+  created_at   DateTime?      @default(now()) @db.DateTime(0)
+  channels     channels[]
+  projects     projects[]
+  reports      reports[]
+  resources    resources[]
+  team_members team_members[]
+}
+
+model ticket_comments {
+  id         Int       @id @default(autoincrement())
+  ticket_id  Int
+  user_id    Int
+  comment    String    @db.Text
+  created_at DateTime? @default(now()) @db.DateTime(0)
+  tickets    tickets   @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ticket_comments_ibfk_1")
+  users      users     @relation(fields: [user_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ticket_comments_ibfk_2")
+
+  @@index([ticket_id], map: "ticket_id")
+  @@index([user_id], map: "user_id")
+}
+
+model ticket_history {
+  id           Int       @id @default(autoincrement())
+  ticket_id    Int
+  action       String    @db.VarChar(100)
+  performed_by Int?
+  performed_at DateTime? @default(now()) @db.DateTime(0)
+  details      String?   @db.Text
+  tickets      tickets   @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ticket_history_ibfk_1")
+  users        users?    @relation(fields: [performed_by], references: [id], onUpdate: NoAction, map: "ticket_history_ibfk_2")
+
+  @@index([performed_by], map: "performed_by")
+  @@index([ticket_id], map: "ticket_id")
+}
+
+model ticket_workflow {
+  id             Int             @id @default(autoincrement())
+  ticket_id      Int
+  workflow_id    Int
+  current_step   Int?
+  tickets        tickets         @relation(fields: [ticket_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ticket_workflow_ibfk_1")
+  workflows      workflows       @relation(fields: [workflow_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "ticket_workflow_ibfk_2")
+  workflow_steps workflow_steps? @relation(fields: [current_step], references: [id], onUpdate: NoAction, map: "ticket_workflow_ibfk_3")
+
+  @@index([current_step], map: "current_step")
+  @@index([ticket_id], map: "ticket_id")
+  @@index([workflow_id], map: "workflow_id")
+}
+
+model tickets {
+  id                               Int               @id @default(autoincrement())
+  project_id                       Int?
+  created_by                       Int?
+  assigned_to                      Int?
+  type                             tickets_type?     @default(other)
+  title                            String            @db.VarChar(150)
+  description                      String?           @db.Text
+  status                           tickets_status?   @default(open)
+  priority                         tickets_priority? @default(medium)
+  sla_hours                        Int?
+  created_at                       DateTime?         @default(now()) @db.DateTime(0)
+  updated_at                       DateTime?         @default(now()) @db.DateTime(0)
+  ticket_comments                  ticket_comments[]
+  ticket_history                   ticket_history[]
+  ticket_workflow                  ticket_workflow[]
+  projects                         projects?         @relation(fields: [project_id], references: [id], onUpdate: NoAction, map: "tickets_ibfk_1")
+  users_tickets_created_byTousers  users?            @relation("tickets_created_byTousers", fields: [created_by], references: [id], onUpdate: NoAction, map: "tickets_ibfk_2")
+  users_tickets_assigned_toTousers users?            @relation("tickets_assigned_toTousers", fields: [assigned_to], references: [id], onUpdate: NoAction, map: "tickets_ibfk_3")
+
+  @@index([assigned_to], map: "assigned_to")
+  @@index([created_by], map: "created_by")
+  @@index([project_id], map: "project_id")
+}
+
+model users {
+  id                                 Int               @id @default(autoincrement())
+  name                               String            @db.VarChar(100)
+  email                              String            @unique(map: "email") @db.VarChar(150)
+  password_hash                      String            @db.VarChar(255)
+  avatar                             String?           @db.VarChar(255)
+  role                               users_role?       @default(user)
+  created_at                         DateTime?         @default(now()) @db.DateTime(0)
+  last_name                          String            @db.VarChar(100)
+  assets                             assets[]
+  channel_members                    channel_members[]
+  documents                          documents[]
+  hr_records                         hr_records[]
+  messages                           messages[]
+  permissions                        permissions[]
+  reports                            reports[]
+  resources                          resources[]
+  task_assignees                     task_assignees[]
+  tasks                              tasks[]
+  team_members                       team_members[]
+  ticket_comments                    ticket_comments[]
+  ticket_history                     ticket_history[]
+  tickets_tickets_created_byTousers  tickets[]         @relation("tickets_created_byTousers")
+  tickets_tickets_assigned_toTousers tickets[]         @relation("tickets_assigned_toTousers")
+}
+
+model workflow_steps {
+  id              Int               @id @default(autoincrement())
+  workflow_id     Int
+  step_order      Int
+  name            String            @db.VarChar(100)
+  action          String?           @db.VarChar(100)
+  ticket_workflow ticket_workflow[]
+  workflows       workflows         @relation(fields: [workflow_id], references: [id], onDelete: Cascade, onUpdate: NoAction, map: "workflow_steps_ibfk_1")
+
+  @@index([workflow_id], map: "workflow_id")
+}
+
+model workflows {
+  id              Int               @id @default(autoincrement())
+  name            String            @db.VarChar(100)
+  description     String?           @db.Text
+  ticket_workflow ticket_workflow[]
+  workflow_steps  workflow_steps[]
+}
+
+enum hr_records_type {
+  attendance
+  vacation
+  evaluation
+}
+
+enum resources_type {
+  person
+  equipment
+  machine
+  other
+}
+
+enum channels_type {
+  public
+  private
+  project
+}
+
+enum leads_status {
+  new
+  contacted
+  qualified
+  lost
+  won
+}
+
+enum team_members_role {
+  owner
+  admin
+  member
+}
+
+enum documents_type {
+  doc
+  wiki
+  policy
+  manual
+}
+
+enum projects_status {
+  active
+  archived
+  completed
+}
+
+enum reports_type {
+  performance
+  kpi
+  custom
+}
+
+enum tickets_type {
+  bug
+  feature
+  support
+  other
+}
+
+enum assets_status {
+  active
+  maintenance
+  retired
+}
+
+enum resources_availability {
+  available
+  busy
+  vacation
+  inactive
+}
+
+enum tasks_status {
+  todo
+  in_progress
+  done
+  blocked
+}
+
+enum users_role {
+  admin
+  manager
+  user
+  guest
+}
+
+enum events_type {
+  milestone
+  meeting
+  holiday
+  other
+}
+
+enum sprints_status {
+  planned
+  active
+  completed
+  retrospective
+}
+
+enum tasks_priority {
+  low
+  medium
+  high
+  urgent
+}
+
+enum contracts_status {
+  active
+  expired
+  cancelled
+}
+
+enum tickets_status {
+  open
+  in_progress
+  resolved
+  closed
+  escalated
+}
+
+enum tickets_priority {
+  low
+  medium
+  high
+  urgent
+}
