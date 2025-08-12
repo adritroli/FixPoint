@@ -43,6 +43,7 @@ import { useNavigate } from "react-router-dom";
 type Company = {
   id: number;
   emp_codigo: string;
+  is_owner: number;
   owner_name: string;
   company_name: string;
   country: string;
@@ -311,6 +312,7 @@ export default function CompaniesPage() {
               <TableHeader>
                 <TableRow>
                   <TableHead>Código</TableHead>
+                  <TableHead>Dueña</TableHead>
                   <TableHead>Empresa</TableHead>
                   <TableHead>Titular</TableHead>
                   <TableHead>País</TableHead>
@@ -335,6 +337,13 @@ export default function CompaniesPage() {
                 {filtered.map((c) => (
                   <TableRow key={c.id}>
                     <TableCell>{c.emp_codigo}</TableCell>
+                    <TableCell>
+                      {c.is_owner ? (
+                        <span className="text-green-600 font-semibold">Sí</span>
+                      ) : (
+                        <span className="text-gray-500">No</span>
+                      )}
+                    </TableCell>
                     <TableCell>{c.company_name}</TableCell>
                     <TableCell>{c.owner_name}</TableCell>
                     <TableCell>{c.country}</TableCell>
@@ -424,6 +433,14 @@ export default function CompaniesPage() {
               <div className="space-y-2">
                 <div>
                   <b>Código:</b> {openDetail.emp_codigo}
+                </div>
+                <div>
+                  <b>Dueña:</b>{" "}
+                  {openDetail.is_owner ? (
+                    <span className="text-green-600 font-semibold">Sí</span>
+                  ) : (
+                    <span className="text-gray-500">No</span>
+                  )}
                 </div>
                 <div>
                   <b>Empresa:</b> {openDetail.company_name}

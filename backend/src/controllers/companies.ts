@@ -18,7 +18,7 @@ export async function getAllCompanies(req: Request, res: Response) {
 // POST /api/companies
 export async function createCompany(req: Request, res: Response) {
   try {
-    const { owner_name, company_name, country, city, address, phone, email, status } = req.body;
+    const { owner_name, company_name, country, city, address, phone, email, status, is_owner } = req.body;
     if (!owner_name || !company_name || !country || !city || !address || !phone || !email) {
       return res.status(400).json({ error: "Faltan campos obligatorios" });
     }
@@ -41,13 +41,22 @@ export async function createCompany(req: Request, res: Response) {
       return emp_codigo;
     }
 
+    // Si is_owner es true, asegúrate de que no haya otra empresa con is_owner=1
+    if (is_owner) {
+      const [owners]: any = await pool.query("SELECT id FROM companies WHERE is_owner=1");
+      if (owners.length > 0) {
+        return res.status(400).json({ error: "Ya existe una empresa dueña del sistema" });
+      }
+    }
+
     const emp_codigo = await generateUniqueEmpCodigo();
 
     const [result]: any = await pool.query(
-      `INSERT INTO companies (emp_codigo, owner_name, company_name, country, city, address, phone, email, status, created_at)
-       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
+      `INSERT INTO companies (emp_codigo, is_owner, owner_name, company_name, country, city, address, phone, email, status, created_at)
+       VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, NOW())`,
       [
         emp_codigo,
+        is_owner ? 1 : 0,
         owner_name,
         company_name,
         country,
@@ -70,18 +79,17 @@ export async function createCompany(req: Request, res: Response) {
 export async function updateCompany(req: Request, res: Response) {
   try {
     const id = Number(req.params.id);
-    const { owner_name, company_name, country, city, address, phone, email, status } = req.body;
-    if (status && !(owner_name || company_name || country || city || address || phone || email)) {
-      // Solo actualizar estado
-      await pool.query(
-        `UPDATE companies SET status=? WHERE id=?`,
-        [status, id]
-      );
-      return res.json({ ok: true });
+    const { owner_name, company_name, country, city, address, phone, email, status, is_owner } = req.body;
+    // Si is_owner es true, asegúrate de que no haya otra empresa con is_owner=1
+    if (is_owner) {
+      const [owners]: any = await pool.query("SELECT id FROM companies WHERE is_owner=1 AND id != ?", [id]);
+      if (owners.length > 0) {
+        return res.status(400).json({ error: "Ya existe una empresa dueña del sistema" });
+      }
     }
     await pool.query(
-      `UPDATE companies SET owner_name=?, company_name=?, country=?, city=?, address=?, phone=?, email=?, status=? WHERE id=?`,
-      [owner_name, company_name, country, city, address, phone, email, status, id]
+      `UPDATE companies SET owner_name=?, company_name=?, country=?, city=?, address=?, phone=?, email=?, status=?, is_owner=? WHERE id=?`,
+      [owner_name, company_name, country, city, address, phone, email, status, is_owner ? 1 : 0, id]
     );
     console.log("[COMPANIES] updateCompany:", req.params.id);
     res.json({ ok: true });
