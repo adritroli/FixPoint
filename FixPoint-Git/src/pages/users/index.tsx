@@ -75,7 +75,14 @@ export default function UsersPage() {
   const [view, setView] = useState<"table" | "cards">("table");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [companyId] = useState<number | null>(null); // null para traer todos si no filtras
+  const user = React.useMemo(() => {
+    try {
+      return JSON.parse(localStorage.getItem("user") || "null");
+    } catch {
+      return null;
+    }
+  }, []);
+  const companyId = user?.company_id; // null para traer todos si no filtras
 
   // Modal states
   const [openCreate, setOpenCreate] = useState(false);
