@@ -40,12 +40,14 @@ import ActivosPage from "@/pages/activos";
 import LoginPage from "./pages/login/login";
 import UsersPage from "./pages/users";
 import HomePage from "./pages/home";
+import CompaniesPage from "./pages/companies";
 
 function App() {
   return (
     <>
       <Router>
         <Routes>
+          <Route path="/companies" element={<CompaniesPage />} />
           <Route path="/home" element={<HomePage />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/" element={<LoginPage />} />

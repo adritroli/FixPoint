@@ -2,6 +2,7 @@ import { Request, Response, NextFunction, Router } from "express";
 import * as usersController from "../controllers/users";
 import   multer from "multer";
 import path from "path";
+import { pool } from "../db";
 
 // Configuración de multer para guardar imágenes en /public/avatars
 
@@ -24,5 +25,14 @@ router.put("/:id", usersController.updateUser);
 router.delete("/:id", usersController.deleteUser);
 router.post("/:id/login", usersController.loginUser);
 router.post("/:id/logout", usersController.logoutUser);
+router.get("/count", async (req, res) => {
+  const company_id = req.query.company_id;
+  if (!company_id) return res.json({ count: 0 });
+  const [rows]: any = await pool.query(
+    "SELECT COUNT(*) as count FROM users WHERE company_id = ? AND deleted_at IS NULL",
+    [company_id]
+  );
+  res.json({ count: rows[0]?.count ?? 0 });
+});
 
 export default router;

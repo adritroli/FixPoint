@@ -1,0 +1,12 @@
+CREATE TABLE companies (
+    id INT AUTO_INCREMENT PRIMARY KEY,
+    emp_codigo VARCHAR(32) NOT NULL UNIQUE,
+    owner_name VARCHAR(100) NOT NULL,
+    company_name VARCHAR(150) NOT NULL,
+    country VARCHAR(100) NOT NULL,
+    city VARCHAR(100) NOT NULL,
+    address VARCHAR(255) NOT NULL,
+    phone VARCHAR(50) NOT NULL,
+    email VARCHAR(150) NOT NULL,
+    created_at DATETIME DEFAULT CURRENT_TIMESTAMP
+);

@@ -75,7 +75,7 @@ export default function UsersPage() {
   const [view, setView] = useState<"table" | "cards">("table");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const [companyId, setCompanyId] = useState<number>(1); // Cambia según tu lógica de empresa/logueo
+  const [companyId] = useState<number | null>(null); // null para traer todos si no filtras
 
   // Modal states
   const [openCreate, setOpenCreate] = useState(false);
@@ -99,12 +99,22 @@ export default function UsersPage() {
 
   const navigate = useNavigate();
 
-  // Fetch users from API (filtrado por empresa)
+  // Fetch users from API (filtrado por empresa si companyId existe)
   useEffect(() => {
-    fetch(`http://localhost:5000/api/users?company_id=${companyId}`)
-      .then((r) => r.json())
+    let url = "http://localhost:5000/api/users";
+    if (companyId) url += `?company_id=${companyId}`;
+    fetch(url)
+      .then((r) => {
+        if (!r.ok) throw new Error("Error al obtener usuarios");
+        return r.json();
+      })
       .then((data) => {
+        console.log("Usuarios recibidos:", data);
         setUsers(data);
+      })
+      .catch((err) => {
+        console.error("Error en fetch usuarios:", err);
+        setUsers([]);
       });
   }, [companyId]);
 
@@ -191,7 +201,10 @@ export default function UsersPage() {
       formData.append("email", form.email);
       formData.append("password", form.password);
       formData.append("role", form.role);
-      formData.append("company_id", companyId.toString());
+      formData.append(
+        "company_id",
+        companyId !== null ? companyId.toString() : ""
+      );
       formData.append("created_by", "1"); // Ajusta según usuario logueado
       if (avatarFile) formData.append("avatar", avatarFile);
 
@@ -275,17 +288,7 @@ export default function UsersPage() {
   return (
     <DefaultLayout>
       <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
-        {/* Selector de empresa */}
-        <div className="flex gap-2 mb-2">
-          <label className="font-semibold">Empresa:</label>
-          <Input
-            type="number"
-            min={1}
-            value={companyId}
-            onChange={(e) => setCompanyId(Number(e.target.value))}
-            className="w-32"
-          />
-        </div>
+        {/* Elimina el selector de empresa */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold">Usuarios</h1>
@@ -608,6 +611,7 @@ export default function UsersPage() {
                   <TableRow>
                     <TableHead>Usuario</TableHead>
                     <TableHead>Rol</TableHead>
+                    <TableHead>Empresa</TableHead>
                     <TableHead>Estado</TableHead>
                     <TableHead>Últ. Login</TableHead>
                     <TableHead>Últ. Logout</TableHead>
@@ -618,7 +622,7 @@ export default function UsersPage() {
                 <TableBody>
                   {filtered.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={7} className="text-center">
+                      <TableCell colSpan={8} className="text-center">
                         No hay usuarios.
                       </TableCell>
                     </TableRow>
@@ -649,6 +653,7 @@ export default function UsersPage() {
                         </div>
                       </TableCell>
                       <TableCell>{u.role}</TableCell>
+                      <TableCell>{u.company_id}</TableCell>
                       <TableCell>
                         {u.is_logged_in ? (
                           <span className="text-green-600 font-semibold">
@@ -751,6 +756,9 @@ export default function UsersPage() {
                     </CardTitle>
                     <div className="text-sm text-muted-foreground">
                       {u.email}
+                    </div>
+                    <div className="text-xs text-muted-foreground">
+                      Empresa: {u.company_id}
                     </div>
                   </div>
                 </CardHeader>

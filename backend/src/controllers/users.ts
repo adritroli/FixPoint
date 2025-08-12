@@ -9,15 +9,24 @@ import fs from "fs";
 export async function getAllUsers(req: Request, res: Response) {
   try {
     const company_id = req.query.company_id;
-    const [rows] = await pool.query(
-      `SELECT id, name, last_name, email, role, avatar, created_at, is_logged_in, last_login_at, last_logout_at, created_by, updated_by, deleted_by, deleted_at
-       FROM users
-       WHERE company_id = ? AND deleted_at IS NULL
-       ORDER BY id DESC`,
-      [company_id]
-    );
+    let rows: any[];
+    if (company_id) {
+      const [result] = await pool.query(
+        `SELECT * FROM users WHERE company_id = ? AND deleted_at IS NULL ORDER BY id DESC`,
+        [company_id]
+      );
+      rows = result as any[];
+      console.log(`[USERS] getAllUsers: company_id=${company_id}, count=${rows.length}`);
+    } else {
+      const [result] = await pool.query(
+        `SELECT * FROM users WHERE deleted_at IS NULL ORDER BY id DESC`
+      );
+      rows = result as any[];
+      console.log(`[USERS] getAllUsers: ALL, count=${rows.length}`);
+    }
     res.json(rows);
   } catch (e) {
+    console.error("[USERS] getAllUsers error:", e);
     res.status(500).json({ error: "Error al obtener usuarios" });
   }
 }
@@ -49,8 +58,10 @@ export async function createUser(req: Request, res: Response) {
        VALUES (?, ?, ?, ?, ?, ?, ?, ?, NOW(), 0)`, // is_logged_in se inicializa en 0
       [name, last_name, email, password_hash, role, avatarUrl, company_id, created_by]
     );
+    console.log("[USERS] createUser:", req.body.email);
     res.status(201).json({ id: result.insertId, avatar: avatarUrl });
   } catch (e) {
+    console.error("[USERS] createUser error:", e);
     res.status(500).json({ error: "Error al crear usuario" });
   }
 }
@@ -66,8 +77,10 @@ export async function updateUser(req: Request, res: Response) {
       `UPDATE users SET name=?, last_name=?, email=?, role=?, updated_by=?, updated_at=NOW() WHERE id=?`,
       [name, last_name, email, role, updated_by, id]
     );
+    console.log("[USERS] updateUser:", req.params.id);
     res.json({ ok: true });
   } catch (e) {
+    console.error("[USERS] updateUser error:", e);
     res.status(500).json({ error: "Error al actualizar usuario" });
   }
 }
@@ -83,8 +96,10 @@ export async function deleteUser(req: Request, res: Response) {
       `UPDATE users SET deleted_at=NOW(), deleted_by=? WHERE id=?`,
       [deleted_by, id]
     );
+    console.log("[USERS] deleteUser:", req.params.id);
     res.json({ ok: true });
   } catch (e) {
+    console.error("[USERS] deleteUser error:", e);
     res.status(500).json({ error: "Error al eliminar usuario" });
   }
 }
@@ -99,8 +114,10 @@ export async function loginUser(req: Request, res: Response) {
       `UPDATE users SET is_logged_in=1, last_login_at=NOW() WHERE id=?`,
       [id]
     );
+    console.log("[USERS] loginUser:", req.params.id);
     res.json({ ok: true });
   } catch (e) {
+    console.error("[USERS] loginUser error:", e);
     res.status(500).json({ error: "Error al loguear usuario" });
   }
 }
@@ -115,8 +132,10 @@ export async function logoutUser(req: Request, res: Response) {
       `UPDATE users SET is_logged_in=0, last_logout_at=NOW() WHERE id=?`,
       [id]
     );
+    console.log("[USERS] logoutUser:", req.params.id);
     res.json({ ok: true });
   } catch (e) {
+    console.error("[USERS] logoutUser error:", e);
     res.status(500).json({ error: "Error al desloguear usuario" });
   }
 }

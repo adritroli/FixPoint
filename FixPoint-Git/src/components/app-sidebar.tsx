@@ -130,6 +130,7 @@ const data = {
         { title: "Home", url: "/home" },
         { title: "Users Manager", url: "/users" },
         { title: "Pruebas", url: "/pruebas" },
+        { title: "Enterprise", url: "/companies" },
       ],
     },
     {
