@@ -29,6 +29,9 @@ import {
   PaginationPrevious,
   PaginationNext,
 } from "@/components/ui/pagination";
+import { BsFillPersonVcardFill } from "react-icons/bs";
+import { MdTableRows } from "react-icons/md";
+
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import {
   Dialog,
@@ -242,8 +245,12 @@ export default function UsersPage() {
           <div className="flex gap-2 items-center">
             <Tabs value={view} onValueChange={handleView}>
               <TabsList>
-                <TabsTrigger value="table">Tabla</TabsTrigger>
-                <TabsTrigger value="cards">Tarjetas</TabsTrigger>
+                <TabsTrigger value="table">
+                  <MdTableRows />
+                </TabsTrigger>
+                <TabsTrigger value="cards">
+                  <BsFillPersonVcardFill />
+                </TabsTrigger>
               </TabsList>
             </Tabs>
             <Button
@@ -251,7 +258,7 @@ export default function UsersPage() {
               className="ml-2"
               variant="default"
             >
-              <Plus className="w-4 h-4 mr-1" /> Nuevo usuario
+              <Plus className="w-4 h-4 mr-1" /> Add User
             </Button>
           </div>
         </div>
