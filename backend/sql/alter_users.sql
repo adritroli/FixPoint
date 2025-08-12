@@ -7,4 +7,8 @@ ADD COLUMN created_by INT NULL,
 ADD COLUMN updated_by INT NULL,
 ADD COLUMN deleted_by INT NULL,
 ADD COLUMN deleted_at DATETIME NULL,
-ADD COLUMN company_id INT NOT NULL AFTER id;
+ADD COLUMN emp_codigo INT NOT NULL AFTER id,
+ADD COLUMN phone VARCHAR(50) NULL AFTER email,
+ADD COLUMN address VARCHAR(255) NULL AFTER phone,
+ADD COLUMN status ENUM('activo', 'inactivo') NOT NULL DEFAULT 'activo' AFTER address,
+MODIFY COLUMN deleted_at DATETIME NULL;

@@ -26,11 +26,11 @@ router.delete("/:id", usersController.deleteUser);
 router.post("/:id/login", usersController.loginUser);
 router.post("/:id/logout", usersController.logoutUser);
 router.get("/count", async (req, res) => {
-  const company_id = req.query.company_id;
-  if (!company_id) return res.json({ count: 0 });
+  const emp_codigo = req.query.emp_codigo;
+  if (!emp_codigo) return res.json({ count: 0 });
   const [rows]: any = await pool.query(
-    "SELECT COUNT(*) as count FROM users WHERE company_id = ? AND deleted_at IS NULL",
-    [company_id]
+    "SELECT COUNT(*) as count FROM users WHERE emp_codigo = ? AND deleted_at IS NULL",
+    [emp_codigo]
   );
   res.json({ count: rows[0]?.count ?? 0 });
 });

@@ -93,7 +93,7 @@ export default function CompaniesPage() {
         const companiesWithUsers = await Promise.all(
           data.map(async (c) => {
             const res = await fetch(
-              `http://localhost:5000/api/users/count?company_id=${c.id}`
+              `http://localhost:5000/api/users/count?emp_codigo=${c.id}`
             );
             const { count } = await res.json();
             return { ...c, user_count: count };
@@ -176,7 +176,7 @@ export default function CompaniesPage() {
 
   return (
     <DefaultLayout>
-      <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
+      <div className="flex flex-col gap-6  mx-auto w-full">
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold">Empresas</h1>
@@ -376,7 +376,7 @@ export default function CompaniesPage() {
                       <Button
                         variant="outline"
                         size="sm"
-                        onClick={() => navigate(`/users?company_id=${c.id}`)}
+                        onClick={() => navigate(`/users?emp_codigo=${c.id}`)}
                       >
                         {c.user_count ?? 0}
                       </Button>

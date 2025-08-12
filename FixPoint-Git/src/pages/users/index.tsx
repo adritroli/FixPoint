@@ -62,7 +62,10 @@ type User = {
   updated_by: number | null;
   deleted_by: number | null;
   deleted_at: string | null;
-  company_id: number;
+  emp_codigo: number;
+  phone?: string;
+  address?: string;
+  status?: "activo" | "inactivo";
 };
 
 const PAGE_SIZE = 10;
@@ -82,7 +85,7 @@ export default function UsersPage() {
       return null;
     }
   }, []);
-  const companyId = user?.company_id; // null para traer todos si no filtras
+  const empCodigo = user?.emp_codigo; // emp_codigo de la empresa del usuario
 
   // Modal states
   const [openCreate, setOpenCreate] = useState(false);
@@ -96,6 +99,9 @@ export default function UsersPage() {
     email: "",
     password: "",
     role: "user",
+    phone: "",
+    address: "",
+    status: "activo" as "activo" | "inactivo",
   });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
@@ -106,10 +112,10 @@ export default function UsersPage() {
 
   const navigate = useNavigate();
 
-  // Fetch users from API (filtrado por empresa si companyId existe)
+  // Fetch users from API (filtrado por emp_codigo si existe)
   useEffect(() => {
     let url = "http://localhost:5000/api/users";
-    if (companyId) url += `?company_id=${companyId}`;
+    if (empCodigo) url += `?emp_codigo=${empCodigo}`;
     fetch(url)
       .then((r) => {
         if (!r.ok) throw new Error("Error al obtener usuarios");
@@ -123,7 +129,7 @@ export default function UsersPage() {
         console.error("Error en fetch usuarios:", err);
         setUsers([]);
       });
-  }, [companyId]);
+  }, [empCodigo]);
 
   // Filter and search
   useEffect(() => {
@@ -208,10 +214,10 @@ export default function UsersPage() {
       formData.append("email", form.email);
       formData.append("password", form.password);
       formData.append("role", form.role);
-      formData.append(
-        "company_id",
-        companyId !== null ? companyId.toString() : ""
-      );
+      formData.append("phone", form.phone);
+      formData.append("address", form.address);
+      formData.append("status", form.status);
+      formData.append("emp_codigo", empCodigo || "");
       formData.append("created_by", "1"); // Ajusta según usuario logueado
       if (avatarFile) formData.append("avatar", avatarFile);
 
@@ -227,10 +233,13 @@ export default function UsersPage() {
           email: "",
           password: "",
           role: "user",
+          phone: "",
+          address: "",
+          status: "activo",
         });
         setAvatarFile(null);
         setOpenCreate(false);
-        fetch(`http://localhost:5000/api/users?company_id=${companyId}`)
+        fetch(`http://localhost:5000/api/users?emp_codigo=${empCodigo}`)
           .then((r) => r.json())
           .then((data) => setUsers(data));
       } else {
@@ -249,7 +258,7 @@ export default function UsersPage() {
     setUsers((prev) => prev.filter((u) => u.id !== id));
   };
 
-  // Editar usuario (solo nombre, apellido, email, role)
+  // Editar usuario (incluye campos nuevos)
   const handleEdit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!openEdit) return;
@@ -267,8 +276,7 @@ export default function UsersPage() {
       if (res.ok) {
         setMsg("Usuario actualizado");
         setOpenEdit(null);
-        // Refrescar usuarios
-        fetch(`http://localhost:5000/api/users?company_id=${companyId}`)
+        fetch(`http://localhost:5000/api/users?emp_codigo=${empCodigo}`)
           .then((r) => r.json())
           .then((data) => setUsers(data));
       } else {
@@ -288,13 +296,16 @@ export default function UsersPage() {
       email: user.email,
       password: "",
       role: user.role,
+      phone: user.phone || "",
+      address: user.address || "",
+      status: user.status || "activo",
     });
     setOpenEdit(user);
   };
 
   return (
     <DefaultLayout>
-      <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
+      <div className="flex flex-col gap-6  mx-auto w-full">
         {/* Elimina el selector de empresa */}
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div className="flex flex-col gap-2">
@@ -388,6 +399,24 @@ export default function UsersPage() {
                 }
                 required
               />
+              <Input
+                name="phone"
+                placeholder="Teléfono"
+                value={form.phone}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, phone: e.target.value }))
+                }
+                required
+              />
+              <Input
+                name="address"
+                placeholder="Dirección"
+                value={form.address}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, address: e.target.value }))
+                }
+                required
+              />
               <Select
                 value={form.role}
                 onValueChange={(v) => setForm((f) => ({ ...f, role: v }))}
@@ -400,6 +429,20 @@ export default function UsersPage() {
                   <SelectItem value="manager">Manager</SelectItem>
                   <SelectItem value="user">User</SelectItem>
                   <SelectItem value="guest">Guest</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={form.status}
+                onValueChange={(v) =>
+                  setForm((f) => ({ ...f, status: v as "activo" | "inactivo" }))
+                }
+              >
+                <SelectTrigger>
+                  {form.status === "activo" ? "Activo" : "Inactivo"}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="activo">Activo</SelectItem>
+                  <SelectItem value="inactivo">Inactivo</SelectItem>
                 </SelectContent>
               </Select>
               {/* Avatar uploader */}
@@ -513,8 +556,18 @@ export default function UsersPage() {
                   </div>
                 </div>
                 <div>Rol: {openDetail.role}</div>
+                <div>Teléfono: {openDetail.phone || "-"}</div>
+                <div>Dirección: {openDetail.address || "-"}</div>
                 <div>
                   Estado:{" "}
+                  {openDetail.status === "activo" ? (
+                    <span className="text-green-600 font-semibold">Activo</span>
+                  ) : (
+                    <span className="text-gray-500">Inactivo</span>
+                  )}
+                </div>
+                <div>
+                  Estado de sesión:{" "}
                   {openDetail.is_logged_in ? (
                     <span className="text-green-600 font-semibold">Online</span>
                   ) : (
@@ -581,6 +634,24 @@ export default function UsersPage() {
                 }
                 required
               />
+              <Input
+                name="phone"
+                placeholder="Teléfono"
+                value={form.phone}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, phone: e.target.value }))
+                }
+                required
+              />
+              <Input
+                name="address"
+                placeholder="Dirección"
+                value={form.address}
+                onChange={(e) =>
+                  setForm((f) => ({ ...f, address: e.target.value }))
+                }
+                required
+              />
               <Select
                 value={form.role}
                 onValueChange={(v) => setForm((f) => ({ ...f, role: v }))}
@@ -593,6 +664,20 @@ export default function UsersPage() {
                   <SelectItem value="manager">Manager</SelectItem>
                   <SelectItem value="user">User</SelectItem>
                   <SelectItem value="guest">Guest</SelectItem>
+                </SelectContent>
+              </Select>
+              <Select
+                value={form.status}
+                onValueChange={(v) =>
+                  setForm((f) => ({ ...f, status: v as "activo" | "inactivo" }))
+                }
+              >
+                <SelectTrigger>
+                  {form.status === "activo" ? "Activo" : "Inactivo"}
+                </SelectTrigger>
+                <SelectContent>
+                  <SelectItem value="activo">Activo</SelectItem>
+                  <SelectItem value="inactivo">Inactivo</SelectItem>
                 </SelectContent>
               </Select>
               {msg && <div className="text-sm text-red-500">{msg}</div>}
@@ -660,7 +745,7 @@ export default function UsersPage() {
                         </div>
                       </TableCell>
                       <TableCell>{u.role}</TableCell>
-                      <TableCell>{u.company_id}</TableCell>
+                      <TableCell>{u.emp_codigo}</TableCell>
                       <TableCell>
                         {u.is_logged_in ? (
                           <span className="text-green-600 font-semibold">
@@ -765,7 +850,7 @@ export default function UsersPage() {
                       {u.email}
                     </div>
                     <div className="text-xs text-muted-foreground">
-                      Empresa: {u.company_id}
+                      Empresa: {u.emp_codigo}
                     </div>
                   </div>
                 </CardHeader>
