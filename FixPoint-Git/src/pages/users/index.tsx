@@ -116,27 +116,31 @@ export default function UsersPage() {
 
   // Fetch users from API (filtrado por emp_codigo si existe)
   useEffect(() => {
-    let url = "http://localhost:5000/api/users";
-    if (empCodigo) url += `?emp_codigo=${empCodigo}`;
-    fetch(url)
-      .then((r) => {
-        if (!r.ok) throw new Error("Error al obtener usuarios");
-        return r.json();
-      })
-      .then((data) => {
-        console.log("Usuarios recibidos:", data);
-        setUsers(data);
-        // Si empCodigo no está en localStorage pero viene en los datos, lo guardamos
-        if (!empCodigo && data.length > 0 && data[0].emp_codigo) {
-          localStorage.setItem("emp_codigo", data[0].emp_codigo);
-          setEmpCodigo(data[0].emp_codigo);
-          console.log("empCodigo recuperado y guardado:", data[0].emp_codigo);
-        }
-      })
-      .catch((err) => {
-        console.error("Error en fetch usuarios:", err);
-        setUsers([]);
-      });
+    let interval: NodeJS.Timeout;
+    const fetchUsers = () => {
+      let url = "http://localhost:5000/api/users";
+      if (empCodigo) url += `?emp_codigo=${empCodigo}`;
+      fetch(url)
+        .then((r) => {
+          if (!r.ok) throw new Error("Error al obtener usuarios");
+          return r.json();
+        })
+        .then((data) => {
+          setUsers(data);
+          // Si empCodigo no está en localStorage pero viene en los datos, lo guardamos
+          if (!empCodigo && data.length > 0 && data[0].emp_codigo) {
+            localStorage.setItem("emp_codigo", data[0].emp_codigo);
+            setEmpCodigo(data[0].emp_codigo);
+            console.log("empCodigo recuperado y guardado:", data[0].emp_codigo);
+          }
+        })
+        .catch(() => setUsers([]));
+    };
+
+    fetchUsers();
+    interval = setInterval(fetchUsers, 10000); // Actualiza cada 10 segundos
+
+    return () => clearInterval(interval);
   }, [empCodigo]);
 
   // Filter and search
