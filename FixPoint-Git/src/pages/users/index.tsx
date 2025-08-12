@@ -41,7 +41,7 @@ import {
   DialogFooter,
   DialogClose,
 } from "@/components/ui/dialog";
-import { useState, useEffect } from "react";
+import { useState, useEffect, useRef } from "react";
 import { Plus, Eye, Pencil, Trash2 } from "lucide-react";
 import { useNavigate } from "react-router-dom";
 
@@ -55,6 +55,14 @@ type User = {
   role: string;
   avatar?: string;
   created_at: string;
+  is_logged_in: number;
+  last_login_at: string | null;
+  last_logout_at: string | null;
+  created_by: number | null;
+  updated_by: number | null;
+  deleted_by: number | null;
+  deleted_at: string | null;
+  company_id: number;
 };
 
 const PAGE_SIZE = 10;
@@ -67,6 +75,7 @@ export default function UsersPage() {
   const [view, setView] = useState<"table" | "cards">("table");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
+  const [companyId, setCompanyId] = useState<number>(1); // Cambia según tu lógica de empresa/logueo
 
   // Modal states
   const [openCreate, setOpenCreate] = useState(false);
@@ -83,17 +92,21 @@ export default function UsersPage() {
   });
   const [loading, setLoading] = useState(false);
   const [msg, setMsg] = useState<string | null>(null);
+  const [avatarFile, setAvatarFile] = useState<File | null>(null);
+  const [cameraActive, setCameraActive] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const canvasRef = useRef<HTMLCanvasElement>(null);
 
   const navigate = useNavigate();
 
-  // Fetch users from API
+  // Fetch users from API (filtrado por empresa)
   useEffect(() => {
-    fetch("http://localhost:5000/api/users")
+    fetch(`http://localhost:5000/api/users?company_id=${companyId}`)
       .then((r) => r.json())
       .then((data) => {
         setUsers(data);
       });
-  }, []);
+  }, [companyId]);
 
   // Filter and search
   useEffect(() => {
@@ -129,16 +142,62 @@ export default function UsersPage() {
 
   const totalPages = Math.ceil(total / PAGE_SIZE);
 
-  // Crear usuario
+  // Tomar foto con cámara
+  const handleStartCamera = async () => {
+    setCameraActive(true);
+    if (navigator.mediaDevices?.getUserMedia && videoRef.current) {
+      const stream = await navigator.mediaDevices.getUserMedia({ video: true });
+      videoRef.current.srcObject = stream;
+      videoRef.current.play();
+    }
+  };
+
+  const handleTakePhoto = () => {
+    if (videoRef.current && canvasRef.current) {
+      const context = canvasRef.current.getContext("2d");
+      if (context) {
+        context.drawImage(videoRef.current, 0, 0, 160, 160);
+        canvasRef.current.toBlob((blob) => {
+          if (blob) {
+            const file = new File([blob], `avatar_${Date.now()}.png`, {
+              type: "image/png",
+            });
+            setAvatarFile(file);
+            setCameraActive(false);
+            // Detener cámara
+            const stream = videoRef.current?.srcObject as MediaStream;
+            stream?.getTracks().forEach((track) => track.stop());
+          }
+        }, "image/png");
+      }
+    }
+  };
+
+  const handleAvatarChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files[0]) {
+      setAvatarFile(e.target.files[0]);
+    }
+  };
+
+  // Crear usuario (con avatar)
   const handleCreate = async (e: React.FormEvent) => {
     e.preventDefault();
     setLoading(true);
     setMsg(null);
     try {
+      const formData = new FormData();
+      formData.append("name", form.name);
+      formData.append("last_name", form.last_name);
+      formData.append("email", form.email);
+      formData.append("password", form.password);
+      formData.append("role", form.role);
+      formData.append("company_id", companyId.toString());
+      formData.append("created_by", "1"); // Ajusta según usuario logueado
+      if (avatarFile) formData.append("avatar", avatarFile);
+
       const res = await fetch("http://localhost:5000/api/users", {
         method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(form),
+        body: formData,
       });
       if (res.ok) {
         setMsg("Usuario creado correctamente");
@@ -149,9 +208,9 @@ export default function UsersPage() {
           password: "",
           role: "user",
         });
+        setAvatarFile(null);
         setOpenCreate(false);
-        // Refrescar usuarios
-        fetch("http://localhost:5000/api/users")
+        fetch(`http://localhost:5000/api/users?company_id=${companyId}`)
           .then((r) => r.json())
           .then((data) => setUsers(data));
       } else {
@@ -189,7 +248,7 @@ export default function UsersPage() {
         setMsg("Usuario actualizado");
         setOpenEdit(null);
         // Refrescar usuarios
-        fetch("http://localhost:5000/api/users")
+        fetch(`http://localhost:5000/api/users?company_id=${companyId}`)
           .then((r) => r.json())
           .then((data) => setUsers(data));
       } else {
@@ -216,6 +275,17 @@ export default function UsersPage() {
   return (
     <DefaultLayout>
       <div className="flex flex-col gap-6 max-w-6xl mx-auto w-full">
+        {/* Selector de empresa */}
+        <div className="flex gap-2 mb-2">
+          <label className="font-semibold">Empresa:</label>
+          <Input
+            type="number"
+            min={1}
+            value={companyId}
+            onChange={(e) => setCompanyId(Number(e.target.value))}
+            className="w-32"
+          />
+        </div>
         <div className="flex flex-col md:flex-row md:items-end md:justify-between gap-4">
           <div className="flex flex-col gap-2">
             <h1 className="text-3xl font-bold">Usuarios</h1>
@@ -322,6 +392,71 @@ export default function UsersPage() {
                   <SelectItem value="guest">Guest</SelectItem>
                 </SelectContent>
               </Select>
+              {/* Avatar uploader */}
+              <div>
+                <label className="block font-medium mb-1">Avatar</label>
+                <div className="flex gap-2 items-center">
+                  <Input
+                    type="file"
+                    accept="image/*"
+                    onChange={handleAvatarChange}
+                  />
+                  <Button
+                    type="button"
+                    variant="outline"
+                    onClick={handleStartCamera}
+                    disabled={cameraActive}
+                  >
+                    Tomar foto
+                  </Button>
+                </div>
+                {avatarFile && (
+                  <div className="mt-2">
+                    <img
+                      src={URL.createObjectURL(avatarFile)}
+                      alt="avatar"
+                      className="w-16 h-16 rounded-full object-cover"
+                    />
+                  </div>
+                )}
+                {cameraActive && (
+                  <div className="mt-2 flex flex-col items-center">
+                    <video
+                      ref={videoRef}
+                      width={160}
+                      height={160}
+                      autoPlay
+                      className="rounded"
+                    />
+                    <canvas
+                      ref={canvasRef}
+                      width={160}
+                      height={160}
+                      style={{ display: "none" }}
+                    />
+                    <Button
+                      type="button"
+                      className="mt-2"
+                      onClick={handleTakePhoto}
+                    >
+                      Capturar foto
+                    </Button>
+                    <Button
+                      type="button"
+                      variant="outline"
+                      className="mt-2"
+                      onClick={() => {
+                        setCameraActive(false);
+                        const stream = videoRef.current
+                          ?.srcObject as MediaStream;
+                        stream?.getTracks().forEach((track) => track.stop());
+                      }}
+                    >
+                      Cancelar cámara
+                    </Button>
+                  </div>
+                )}
+              </div>
               {msg && <div className="text-sm text-red-500">{msg}</div>}
               <DialogFooter>
                 <Button type="submit" disabled={loading}>
@@ -368,6 +503,26 @@ export default function UsersPage() {
                   </div>
                 </div>
                 <div>Rol: {openDetail.role}</div>
+                <div>
+                  Estado:{" "}
+                  {openDetail.is_logged_in ? (
+                    <span className="text-green-600 font-semibold">Online</span>
+                  ) : (
+                    <span className="text-gray-500">Offline</span>
+                  )}
+                </div>
+                <div>
+                  Última conexión:{" "}
+                  {openDetail.last_login_at
+                    ? new Date(openDetail.last_login_at).toLocaleString()
+                    : "-"}
+                </div>
+                <div>
+                  Última desconexión:{" "}
+                  {openDetail.last_logout_at
+                    ? new Date(openDetail.last_logout_at).toLocaleString()
+                    : "-"}
+                </div>
                 <div>
                   Creado: {new Date(openDetail.created_at).toLocaleDateString()}
                 </div>
@@ -453,6 +608,9 @@ export default function UsersPage() {
                   <TableRow>
                     <TableHead>Usuario</TableHead>
                     <TableHead>Rol</TableHead>
+                    <TableHead>Estado</TableHead>
+                    <TableHead>Últ. Login</TableHead>
+                    <TableHead>Últ. Logout</TableHead>
                     <TableHead>Creado</TableHead>
                     <TableHead className="text-right">Acciones</TableHead>
                   </TableRow>
@@ -460,7 +618,7 @@ export default function UsersPage() {
                 <TableBody>
                   {filtered.length === 0 && (
                     <TableRow>
-                      <TableCell colSpan={4} className="text-center">
+                      <TableCell colSpan={7} className="text-center">
                         No hay usuarios.
                       </TableCell>
                     </TableRow>
@@ -491,6 +649,25 @@ export default function UsersPage() {
                         </div>
                       </TableCell>
                       <TableCell>{u.role}</TableCell>
+                      <TableCell>
+                        {u.is_logged_in ? (
+                          <span className="text-green-600 font-semibold">
+                            Online
+                          </span>
+                        ) : (
+                          <span className="text-gray-500">Offline</span>
+                        )}
+                      </TableCell>
+                      <TableCell>
+                        {u.last_login_at
+                          ? new Date(u.last_login_at).toLocaleString()
+                          : "-"}
+                      </TableCell>
+                      <TableCell>
+                        {u.last_logout_at
+                          ? new Date(u.last_logout_at).toLocaleString()
+                          : "-"}
+                      </TableCell>
                       <TableCell>
                         {new Date(u.created_at).toLocaleDateString()}
                       </TableCell>
@@ -579,6 +756,28 @@ export default function UsersPage() {
                 </CardHeader>
                 <CardContent>
                   <div className="text-sm mb-1">Rol: {u.role}</div>
+                  <div className="text-xs text-muted-foreground">
+                    Estado:{" "}
+                    {u.is_logged_in ? (
+                      <span className="text-green-600 font-semibold">
+                        Online
+                      </span>
+                    ) : (
+                      <span className="text-gray-500">Offline</span>
+                    )}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Últ. Login:{" "}
+                    {u.last_login_at
+                      ? new Date(u.last_login_at).toLocaleString()
+                      : "-"}
+                  </div>
+                  <div className="text-xs text-muted-foreground">
+                    Últ. Logout:{" "}
+                    {u.last_logout_at
+                      ? new Date(u.last_logout_at).toLocaleString()
+                      : "-"}
+                  </div>
                   <div className="text-xs text-muted-foreground">
                     Creado: {new Date(u.created_at).toLocaleDateString()}
                   </div>

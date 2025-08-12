@@ -122,10 +122,21 @@ const data = {
   ],
   navMain: [
     {
-      title: "Gestión de Proyectos",
+      title: "DESARROLLO",
       url: "#",
       icon: KanbanSquare,
       isActive: true,
+      items: [
+        { title: "Home", url: "/home" },
+        { title: "Users Manager", url: "/users" },
+        { title: "Pruebas", url: "/pruebas" },
+      ],
+    },
+    {
+      title: "Gestión de Proyectos",
+      url: "#",
+      icon: KanbanSquare,
+      isActive: false,
       items: [
         { title: "Kanban", url: "/kanban" },
         { title: "Sprints & Scrum", url: "/sprints" },

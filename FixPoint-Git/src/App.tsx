@@ -39,11 +39,14 @@ import RRHHPage from "@/pages/rrhh";
 import ActivosPage from "@/pages/activos";
 import LoginPage from "./pages/login/login";
 import UsersPage from "./pages/users";
+import HomePage from "./pages/home";
+
 function App() {
   return (
     <>
       <Router>
         <Routes>
+          <Route path="/home" element={<HomePage />} />
           <Route path="/users" element={<UsersPage />} />
           <Route path="/" element={<LoginPage />} />
           <Route path="/kanban" element={<KanbanPage />} />
