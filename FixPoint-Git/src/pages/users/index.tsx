@@ -78,14 +78,16 @@ export default function UsersPage() {
   const [view, setView] = useState<"table" | "cards">("table");
   const [page, setPage] = useState(1);
   const [total, setTotal] = useState(0);
-  const user = React.useMemo(() => {
-    try {
-      return JSON.parse(localStorage.getItem("user") || "null");
-    } catch {
-      return null;
-    }
-  }, []);
-  const empCodigo = user?.emp_codigo; // emp_codigo de la empresa del usuario
+  const [empCodigo, setEmpCodigo] = useState<string | null>(() => {
+    const user = (() => {
+      try {
+        return JSON.parse(localStorage.getItem("user") || "null");
+      } catch {
+        return null;
+      }
+    })();
+    return user?.emp_codigo || localStorage.getItem("emp_codigo") || null;
+  });
 
   // Modal states
   const [openCreate, setOpenCreate] = useState(false);
@@ -124,6 +126,12 @@ export default function UsersPage() {
       .then((data) => {
         console.log("Usuarios recibidos:", data);
         setUsers(data);
+        // Si empCodigo no está en localStorage pero viene en los datos, lo guardamos
+        if (!empCodigo && data.length > 0 && data[0].emp_codigo) {
+          localStorage.setItem("emp_codigo", data[0].emp_codigo);
+          setEmpCodigo(data[0].emp_codigo);
+          console.log("empCodigo recuperado y guardado:", data[0].emp_codigo);
+        }
       })
       .catch((err) => {
         console.error("Error en fetch usuarios:", err);
@@ -207,6 +215,17 @@ export default function UsersPage() {
     e.preventDefault();
     setLoading(true);
     setMsg(null);
+
+    console.log("empCodigo usado para crear usuario:", empCodigo);
+
+    if (!empCodigo) {
+      setMsg(
+        "No se encontró el código de empresa. Reloguea o contacta al admin."
+      );
+      setLoading(false);
+      return;
+    }
+
     try {
       const formData = new FormData();
       formData.append("name", form.name);
@@ -217,9 +236,14 @@ export default function UsersPage() {
       formData.append("phone", form.phone);
       formData.append("address", form.address);
       formData.append("status", form.status);
-      formData.append("emp_codigo", empCodigo || "");
+      formData.append("emp_codigo", empCodigo);
       formData.append("created_by", "1"); // Ajusta según usuario logueado
       if (avatarFile) formData.append("avatar", avatarFile);
+
+      // Log para ver el contenido de formData
+      for (let [key, value] of formData.entries()) {
+        console.log("formData:", key, value);
+      }
 
       const res = await fetch("http://localhost:5000/api/users", {
         method: "POST",
@@ -243,10 +267,13 @@ export default function UsersPage() {
           .then((r) => r.json())
           .then((data) => setUsers(data));
       } else {
-        setMsg("Error al crear usuario");
+        const errorText = await res.text();
+        setMsg("Error al crear usuario: " + errorText);
+        console.error("Error al crear usuario:", errorText);
       }
-    } catch {
+    } catch (err) {
       setMsg("Error de red");
+      console.error("Error de red:", err);
     }
     setLoading(false);
   };

@@ -35,7 +35,9 @@ export function LoginForm({
       if (res.ok) {
         const user = await res.json();
         localStorage.setItem("user", JSON.stringify(user));
-        // Puedes guardar emp_codigo en localStorage si tu backend lo devuelve
+        if (user.emp_codigo) {
+          localStorage.setItem("emp_codigo", user.emp_codigo);
+        }
         navigate("/home");
       } else {
         setError("Credenciales incorrectas");
